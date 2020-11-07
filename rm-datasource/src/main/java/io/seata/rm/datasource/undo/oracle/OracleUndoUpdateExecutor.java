@@ -28,6 +28,8 @@ import io.seata.rm.datasource.sql.struct.TableRecords;
 import io.seata.rm.datasource.undo.AbstractUndoExecutor;
 import io.seata.rm.datasource.undo.SQLUndoLog;
 import io.seata.sqlparser.util.JdbcConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The type oracle undo update executor.
@@ -36,6 +38,7 @@ import io.seata.sqlparser.util.JdbcConstants;
  */
 public class OracleUndoUpdateExecutor extends AbstractUndoExecutor {
 
+    Logger logger = LoggerFactory.getLogger(OracleUndoUpdateExecutor.class);
     /**
      * UPDATE a SET x = ?, y = ?, z = ? WHERE pk1 = ? and pk2 = ?
      */
@@ -60,8 +63,9 @@ public class OracleUndoUpdateExecutor extends AbstractUndoExecutor {
         List<String> pkNameList = getOrderedPkList(beforeImage, row, JdbcConstants.ORACLE).stream().map(
             e -> e.getName()).collect(Collectors.toList());
         String whereSql = SqlGenerateUtils.buildWhereConditionByPKs(pkNameList, JdbcConstants.ORACLE);
-
-        return String.format(UPDATE_SQL_TEMPLATE, sqlUndoLog.getTableName(), updateColumns, whereSql);
+        String format = String.format(UPDATE_SQL_TEMPLATE, sqlUndoLog.getTableName(), updateColumns, whereSql);
+        logger.info("seata-undo-sql:{}", format);
+        return format;
     }
 
     /**

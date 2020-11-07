@@ -24,6 +24,8 @@ import io.seata.rm.datasource.sql.struct.TableRecords;
 import io.seata.rm.datasource.undo.AbstractUndoExecutor;
 import io.seata.rm.datasource.undo.SQLUndoLog;
 import io.seata.sqlparser.util.JdbcConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
  */
 public class OracleUndoDeleteExecutor extends AbstractUndoExecutor {
 
+    Logger logger = LoggerFactory.getLogger(OracleUndoDeleteExecutor.class);
     /**
      * INSERT INTO a (x, y, z, pk) VALUES (?, ?, ?, ?)
      */
@@ -68,8 +71,9 @@ public class OracleUndoDeleteExecutor extends AbstractUndoExecutor {
             .collect(Collectors.joining(", "));
         String insertValues = fields.stream().map(field -> "?")
             .collect(Collectors.joining(", "));
-
-        return String.format(INSERT_SQL_TEMPLATE, sqlUndoLog.getTableName(), insertColumns, insertValues);
+        String format = String.format(INSERT_SQL_TEMPLATE, sqlUndoLog.getTableName(), insertColumns, insertValues);
+        logger.info("seata-undo-sql:{}",format);
+        return format;
     }
 
     @Override

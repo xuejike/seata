@@ -18,6 +18,8 @@ package io.seata.rm.datasource.undo;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 import javax.sql.rowset.serial.SerialDatalink;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.JDBCType;
@@ -27,6 +29,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alibaba.druid.sql.visitor.functions.Char;
 import com.alibaba.fastjson.JSON;
 import io.seata.common.util.IOUtil;
 import io.seata.common.util.StringUtils;
@@ -160,14 +163,34 @@ public abstract class AbstractUndoExecutor {
             int type = undoValue.getType();
             Object value = undoValue.getValue();
             if (type == JDBCType.BLOB.getVendorTypeNumber()) {
-                SerialBlob serialBlob = (SerialBlob) value;
+
+                SerialBlob serialBlob = null;
+                if (value instanceof SerialBlob){
+                    serialBlob = (SerialBlob) value;
+                }else if (value != null){
+                    if (value instanceof byte[]){
+                        serialBlob = new SerialBlob((byte[]) value);
+                    }else if (value instanceof String){
+                        serialBlob = new SerialBlob(((String)value).getBytes());
+                    }
+                }
                 if (serialBlob != null) {
                     undoPST.setBlob(undoIndex, serialBlob.getBinaryStream());
                 } else {
                     undoPST.setObject(undoIndex, null);
                 }
             } else if (type == JDBCType.CLOB.getVendorTypeNumber()) {
-                SerialClob serialClob = (SerialClob) value;
+                SerialClob serialClob = null;
+                if (value instanceof SerialClob){
+                    serialClob = (SerialClob) value;
+                } else if (value != null){
+                    if (value instanceof char[]){
+                        serialClob = new SerialClob((char[]) value);
+                    }else if (value instanceof String){
+                        serialClob = new SerialClob(((String)value).toCharArray());
+                    }
+                }
+
                 if (serialClob != null) {
                     undoPST.setClob(undoIndex, serialClob.getCharacterStream());
                 } else {
